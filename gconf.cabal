@@ -20,6 +20,9 @@ Category:       System
 Tested-With:    GHC == 6.12.1
 Extra-Source-Files: Gtk2HsSetup.hs
                     marshal.list
+Data-Dir:		demo
+Data-Files:		GConfDemo.hs
+                Makefile
 
 x-Types-File:    System/Gnome/GConf/Types.chs
 x-Types-Tag:     gconf
