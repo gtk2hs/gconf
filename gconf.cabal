@@ -20,14 +20,17 @@ Category:       System
 Tested-With:    GHC == 6.12.1
 Extra-Source-Files: Gtk2HsSetup.hs
                     marshal.list
+					hierarchy.list
+					
 Data-Dir:		demo
 Data-Files:		GConfDemo.hs
                 Makefile
 
-x-Types-File:    System/Gnome/GConf/Types.chs
-x-Types-Tag:     gconf
-x-Types-ModName: System.Gnome.GConf.Types
-x-Types-Import:  System.Glib.GObject
+x-Types-File:       System/Gnome/GConf/Types.chs
+x-Types-ModName:    System.Gnome.GConf.Types
+x-Types-Import:     System.Glib.GObject
+x-Types-Tag:        gconf
+x-Types-Hierarchy:  hierarchy.list
 
 Source-Repository head
   type:         darcs
