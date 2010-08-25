@@ -23,17 +23,17 @@ main = do
   (stringValue :: String) <- conf `gconfGet` "/apps/gtk2hs-gconf-demo/stringValue"
   (pairValue :: (Int,Bool)) <- conf `gconfGet` "/apps/gtk2hs-gconf-demo/pairValue"
   (listValue :: [Int]) <- conf `gconfGet` "/apps/gtk2hs-gconf-demo/listValue"
- 
+
   print intValue
   print boolValue
   print floatValue
   print stringValue
   print pairValue
   print listValue
-  
+
   -- register for notification of changes
   conf `gconfAddDir` "/apps/gtk2hs-gconf-demo"
-  
+
   -- using the prefered API which allows you to specify the key/dir of interest.
   -- This is usuall what you want because you'll do different things in response
   -- to changes in different keys. Also, it allows you to use native types rather
@@ -53,7 +53,7 @@ main = do
 
   -- and the other API (which gives you notifications on everything)
   conf `afterValueChanged` doSomethingWhenAnyKeyChanges
-                  
+
   -- run the glib main loop otherwise we wouldn't wait for changes
   putStrLn $ "waiting for any changes in the gconf dir"
           ++ "\"/apps/gtk2hs-gconf-demo\""
