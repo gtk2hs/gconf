@@ -37,7 +37,7 @@ Source-Repository head
   location:     http://code.haskell.org/gconf/
 
 Library
-        build-depends:  base >= 4 && < 5, array, containers, haskell98, mtl,
+        build-depends:  base >= 4 && < 5,
                         glib >= 0.12 && < 0.13
 						
         build-tools:    gtk2hsC2hs, gtk2hsHookGenerator, gtk2hsTypeGen
