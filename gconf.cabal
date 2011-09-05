@@ -17,7 +17,7 @@ Description:    GConf is a configuration database system for storing application
                 running applications. It is written for the GNOME desktop but doesn't
                 require it.
 Category:       System
-Tested-With:    GHC == 6.12.1
+Tested-With:    GHC == 6.10.4, GHC == 6.12.3, GHC == 7.0.4, GHC == 7.2.1
 Extra-Source-Files: SetupWrapper.hs SetupMain.hs Gtk2HsSetup.hs
                     marshal.list
 					hierarchy.list
