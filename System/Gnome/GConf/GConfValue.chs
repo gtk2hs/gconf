@@ -40,6 +40,8 @@ module System.Gnome.GConf.GConfValue (
  ) where
 
 import Control.Monad (liftM, when)
+import Control.Exception (catch, IOException)
+import Prelude hiding (catch)
 
 import System.Glib.FFI
 import System.Glib.UTFString
@@ -93,7 +95,7 @@ instance GConfValueClass value => GConfValueClass (Maybe value) where
   unsafeMarshalFromGConfValue = marshalFromGConfValue
   marshalFromGConfValue value =
     catch (liftM Just $ marshalFromGConfValue value)
-          (\_ -> return Nothing)
+          (\(e :: IOException) -> return Nothing)
   marshalToGConfValue (Just v) = marshalToGConfValue v
   marshalToGConfValue Nothing  = return $ GConfValue nullPtr
 
