@@ -1,11 +1,12 @@
+{-# LANGUAGE OverlappingInstances, ScopedTypeVariables #-}
 module Main where
 
 import Graphics.UI.Gtk (initGUI, mainGUI)
 import System.Gnome.GConf
 
-import Monad (when)
+import Control.Monad (when)
 import System.Exit (exitFailure)
-import List (intersperse)
+import Data.List (intersperse)
 
 main = do
   -- connect to gconf
