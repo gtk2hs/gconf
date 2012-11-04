@@ -178,7 +178,7 @@ gconfRemoveDir gc key =
 
 {#pointer GFreeFunc#}
 
-foreign import ccall "wrapper" mkDestructor :: IO () -> IO GFreeFunc
+foreign import ccall "wrapper" mkDestructor :: (Ptr () -> IO ()) -> IO GFreeFunc
 
 type GConfClientNotifyFunc = Ptr () ->         --GConfClient *client
                              {#type guint#} -> --guint cnxn_id
@@ -198,7 +198,7 @@ connect_GConfClientNotifyFunc gc key user = do
   hPtr <- mkHandler_GConfClientNotifyFunc
     (\_ _ entryPtr _ -> user (GConfEntry $ castPtr entryPtr))
   dRef <- newIORef nullFunPtr
-  dPtr <- mkDestructor $ do
+  dPtr <- mkDestructor $ \_ -> do
     freeHaskellFunPtr hPtr
     dPtr <- readIORef dRef
     freeHaskellFunPtr dPtr
