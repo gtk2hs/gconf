@@ -42,13 +42,13 @@ module System.Gnome.GConf.GConfClient (
   -- * Creation operation
   --
   gconfGetDefault,
-  
+
   -- * Registering for change notifications
   --
   gconfAddDir, gconfRemoveDir,
   gconfNotifyAdd, gconfNotifyRemove,
   onValueChanged, afterValueChanged,
-  
+
   -- * Getting and setting configuration values
   --
   gconfGet, gconfSet,
@@ -80,7 +80,7 @@ module System.Gnome.GConf.GConfClient (
   GConfPrimitiveValueClass,
   GConfValue,
   GConfValueDyn(..),
-  
+
 ) where
 
 import Control.Monad	(liftM, when)
@@ -149,12 +149,12 @@ gconfAddDir gc key = gconfAddDirWithPreload gc key PreloadNone
 -- As a rule of thumb, if you plan to get the value of almost all the keys in a
 -- directory, preloading that directory will probably enhance performance. If
 -- you plan to use only half the keys, preloading is likely a bad idea.
--- 
+--
 -- * PreloadNone specifies that no preload occurs
 -- * PreloadOnelevel loads the immediate children of the directory
 -- * PreloadRecursive loads all children of the directory and its
 --   subdirectories, recursively.
--- 
+--
 gconfAddDirWithPreload :: GConf -> String -> GConfPreloadType -> IO ()
 gconfAddDirWithPreload gc key preload =
   propagateGError $ \gerrorPtr ->
@@ -172,7 +172,7 @@ gconfAddDirWithPreload gc key preload =
 gconfRemoveDir :: GConf -> String -> IO ()
 gconfRemoveDir gc key =
   propagateGError $ \gerrorPtr ->
-  withCString key $ \strPtr ->    
+  withCString key $ \strPtr ->
     {# call gconf_client_remove_dir #} gc strPtr gerrorPtr
 
 
@@ -189,7 +189,7 @@ type GConfClientNotifyFunc = Ptr () ->         --GConfClient *client
 foreign import ccall "wrapper" mkHandler_GConfClientNotifyFunc ::
   GConfClientNotifyFunc -> IO (FunPtr GConfClientNotifyFunc)
 
-connect_GConfClientNotifyFunc :: 
+connect_GConfClientNotifyFunc ::
   GConf ->
   String ->
   (GConfEntry -> IO ()) ->
@@ -245,7 +245,7 @@ gconfGet gc key = do
            withCString key $ \strPtr ->
            {# call gconf_client_get #} gc strPtr gerrorPtr
   marshalFromGConfValue (GConfValue value)
-  
+
 gconfGetInt :: GConf -> String -> IO Int
 gconfGetInt = gconfGet
 
@@ -357,7 +357,7 @@ gconfPreload gc key preload =
 
 -- | Suggests to gconfd that you've just finished a block of changes, and it
 -- would be an optimal time to sync to permanent storage. This is only a
--- suggestion; and gconfd will eventually sync even if you don't call 
+-- suggestion; and gconfd will eventually sync even if you don't call
 -- 'gconfSuggestSync'. This function is just a "hint" provided to gconfd to
 -- maximize efficiency and minimize data loss.
 --
@@ -366,7 +366,7 @@ gconfSuggestSync gc =
   propagateGError $ \gerrorPtr ->
   {# call gconf_client_suggest_sync #} gc gerrorPtr
 
--- |  
+-- |
 --
 gconfAllEntries :: GConf -> String -> IO [(String, GConfValueDyn)]
 gconfAllEntries gc dir = do
@@ -386,7 +386,7 @@ gconfAllEntries gc dir = do
                      return (key,value))
        entryList
 
--- | 
+-- |
 --
 gconfAllDirs :: GConf -> String -> IO [String]
 gconfAllDirs gc dir = do
@@ -398,7 +398,7 @@ gconfAllDirs gc dir = do
                       return str)
        dirList
 
--- | 
+-- |
 --
 gconfDirExists :: GConf -> String -> IO Bool
 gconfDirExists gc dir =
@@ -412,10 +412,10 @@ onValueChanged, afterValueChanged :: GConf ->
                                      (String -> Maybe GConfValueDyn -> IO ()) ->
 				                             IO (ConnectId GConf)
 onValueChanged gc handler =
-  connect_STRING_PTR__NONE "value_changed" False gc
+  connect_GLIBSTRING_PTR__NONE "value_changed" False gc
   (convertValueChangedHandler handler)
 afterValueChanged gc handler =
-  connect_STRING_PTR__NONE "value_changed" True gc
+  connect_GLIBSTRING_PTR__NONE "value_changed" True gc
   (convertValueChangedHandler handler)
 
 convertValueChangedHandler :: (String -> Maybe GConfValueDyn -> IO ()) ->
