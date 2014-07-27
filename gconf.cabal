@@ -9,7 +9,7 @@ Build-Type:     Custom
 Cabal-Version:  >= 1.8
 Stability:      stable
 homepage:       http://projects.haskell.org/gtk2hs/
-bug-reports:    http://hackage.haskell.org/trac/gtk2hs/
+bug-reports:    https://github.com/gtk2hs/gconf/issues
 Synopsis:       Binding to the GNOME configuration database system.
 Description:    GConf is a configuration database system for storing application
                 preferences. It supports default or mandatory settings set by the
