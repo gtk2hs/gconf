@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE CPP, TypeSynonymInstances, OverlappingInstances, ScopedTypeVariables, FlexibleInstances #-}
 -- String & [a] overlap
 -- -*-haskell-*-
@@ -19,13 +20,13 @@
 --  Library General Public License for more details.
 --
 --  |
---  
+--
 --  Module for dealing with the values stored in the GConf system.
 --
 --  GConfValue has its own primitive type system which is represented in
 --  Haskell using type classes. This allows values to be get and set without
 --  needing to perform any dynamic type casting or needing a union type.
---  
+--
 --  Alternatively, a dynamic\/union type is provided for the rare occasions
 --  when that degree of flexability is required. It should only be necessary
 --  if you need to deal with configuration values without statically knowing
@@ -42,6 +43,7 @@ module System.Gnome.GConf.GConfValue (
 import Control.Monad (liftM, when)
 import Control.Exception (catch, IOException)
 import Prelude hiding (catch)
+import Data.Text (Text)
 
 import System.Glib.FFI
 import System.Glib.UTFString
@@ -58,7 +60,7 @@ import System.Glib.GList (toGSList, readGSList)
 class GConfValueClass value where
   --unsafe because assumes non-null pointer and correct type
   unsafeMarshalFromGConfValue :: GConfValue -> IO value
-  
+
   -- safe checked version, may throw exception
   marshalFromGConfValue :: GConfValue -> IO value
   marshalFromGConfValue value = do
@@ -77,7 +79,7 @@ class GConfValueClass value where
 -- function that is prepared to asume ownership of the value.
 
 -- | Dynamic version for when the type is not known statically.
-data GConfValueDyn = GConfValueString String
+data GConfValueDyn = GConfValueString Text
                    | GConfValueInt Int
                    | GConfValueFloat Double
                    | GConfValueBool Bool
@@ -105,7 +107,7 @@ class GConfValueClass value => GConfPrimitiveValueClass value
 instance GConfPrimitiveValueClass Int
 instance GConfPrimitiveValueClass Bool
 instance GConfPrimitiveValueClass Double
-instance GConfPrimitiveValueClass String
+instance GConfPrimitiveValueClass Text
 
 instance GConfValueClass Int where
   typeofGConfValue _ = GconfValueInt
@@ -137,7 +139,7 @@ instance GConfValueClass Double where
 -- Now unfortunately String & [a] overlap, although really they don't since Char
 -- is not an instance of GConfPrimitiveValueClass, however classes are open so
 -- we don't know that Char would never be an instance. I want closed classes!
-instance GConfValueClass String where
+instance GlibString string => GConfValueClass string where
   typeofGConfValue _ = GconfValueString
 
   unsafeMarshalFromGConfValue value = do
@@ -147,7 +149,7 @@ instance GConfValueClass String where
   marshalToGConfValue s = do
     value <- {# call unsafe gconf_value_new #}
       (fromIntegral $ fromEnum GconfValueString)
-    withCString s $ \strPtr ->
+    withUTFString s $ \strPtr ->
       {# call unsafe gconf_value_set_string #} (GConfValue value) strPtr
     return (GConfValue value)
 
@@ -198,7 +200,7 @@ instance GConfPrimitiveValueClass a => GConfValueClass [a] where
     return (GConfValue value)
 
 ----------------
--- For convenience and best practice, an instance for Enum 
+-- For convenience and best practice, an instance for Enum
 -- This conforms to the GConf GTK+/Gnome convention for storing enum types,
 -- which is to store them as a string using ThisStlyeOfCapitalisation.
 
@@ -313,11 +315,11 @@ instance GConfValueClass GConfValueDyn where
       GconfValueSchema -> return GConfValueSchema
       GconfValueList   -> liftM GConfValueList   $ unsafeMarshalGConfValueDynListFromGConfValue value
       GconfValuePair   -> liftM GConfValuePair   $ unsafeMarshalGConfValueDynPairFromGConfValue value
-  
+
   marshalFromGConfValue value@(GConfValue ptr) = do
     when (ptr == nullPtr) $ fail "GConf: cannot get value of key, key is unset"
     unsafeMarshalFromGConfValue value
-  
+
   marshalToGConfValue v = case v of
     (GConfValueString v') -> marshalToGConfValue v'
     (GConfValueInt    v') -> marshalToGConfValue v'

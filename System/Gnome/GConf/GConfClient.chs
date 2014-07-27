@@ -85,6 +85,7 @@ module System.Gnome.GConf.GConfClient (
 
 import Control.Monad	(liftM, when)
 import Data.IORef (newIORef, readIORef, writeIORef)
+import Data.Text (Text)
 import System.IO.Unsafe (unsafePerformIO)
 
 import System.Glib.FFI
@@ -211,15 +212,15 @@ connect_GConfClientNotifyFunc gc key user = do
 
 newtype GConfConnectId = GConfConnectId {#type guint#}
 
-gconfNotifyAdd :: GConfValueClass value =>
+gconfNotifyAdd :: (GConfValueClass value, GlibString string) =>
                         GConf ->
                         String ->
-                        (String -> value -> IO ()) ->
+                        (string -> value -> IO ()) ->
 				                IO GConfConnectId
 gconfNotifyAdd gc key handler =
   connect_GConfClientNotifyFunc gc key (convertValueChangedHandler handler)
-  where convertValueChangedHandler :: GConfValueClass value =>
-                                      (String -> value -> IO ()) ->
+  where convertValueChangedHandler :: (GConfValueClass value, GlibString string) =>
+                                      (string -> value -> IO ()) ->
                                       (GConfEntry -> IO ())
         convertValueChangedHandler handler entry = do
           keyStrPtr <- {# call unsafe gconf_entry_get_key #} entry
@@ -237,39 +238,42 @@ gconfNotifyRemove gc (GConfConnectId cxid) =
 
 -- | Gets the value of a configuration key.
 --
-gconfGet :: GConfValueClass value => GConf
-         -> String   -- ^ Name of the key
+gconfGet :: (GConfValueClass value, GlibString string) => GConf
+         -> string   -- ^ Name of the key
 	 -> IO value
 gconfGet gc key = do
   value <- propagateGError $ \gerrorPtr ->
-           withCString key $ \strPtr ->
+           withUTFString key $ \strPtr ->
            {# call gconf_client_get #} gc strPtr gerrorPtr
   marshalFromGConfValue (GConfValue value)
 
-gconfGetInt :: GConf -> String -> IO Int
+gconfGetInt :: GlibString string => GConf -> string -> IO Int
 gconfGetInt = gconfGet
 
-gconfGetBool :: GConf -> String -> IO Bool
+gconfGetBool :: GlibString string => GConf -> string -> IO Bool
 gconfGetBool = gconfGet
 
-gconfGetFloat :: GConf -> String -> IO Double
+gconfGetFloat :: GlibString string => GConf -> string -> IO Double
 gconfGetFloat = gconfGet
 
-gconfGetString :: GConf -> String -> IO String
-gconfGetString = gconfGet
+-- gconfGetString :: GlibString string => GConf -> string -> IO String
+-- gconfGetString = gconfGet
 
-gconfGetPair :: GConfValueClass (a,b) =>
-                GConf -> String -> IO (a, b)
+gconfGetText :: GlibString string => GConf -> string -> IO Text
+gconfGetText = gconfGet
+
+gconfGetPair :: (GConfValueClass (a,b), GlibString string) =>
+                GConf -> string -> IO (a, b)
 gconfGetPair = gconfGet
 
-gconfGetList :: GConfValueClass [a] =>
-                GConf -> String -> IO [a]
+gconfGetList :: (GConfValueClass [a], GlibString string) =>
+                GConf -> string -> IO [a]
 gconfGetList = gconfGet
 
 -- | Sets the value of a configuration key.
 --
-gconfSet :: GConfValueClass value => GConf
-         -> String  -- ^ Name of the key
+gconfSet :: (GConfValueClass value, GlibString string) => GConf
+         -> string  -- ^ Name of the key
 	 -> value   -- ^ New value
 	 -> IO ()
 gconfSet gc key val = do
@@ -277,27 +281,30 @@ gconfSet gc key val = do
   if ptr == nullPtr
     then gconfUnset gc key
     else propagateGError $ \gerrorPtr ->
-         withCString key $ \strPtr ->
+         withUTFString key $ \strPtr ->
          {# call gconf_client_set #} gc strPtr value gerrorPtr
 
-gconfSetInt :: GConf -> String -> Int -> IO ()
+gconfSetInt :: GlibString string => GConf -> string -> Int -> IO ()
 gconfSetInt = gconfSet
 
-gconfSetBool :: GConf -> String -> Bool -> IO ()
+gconfSetBool :: GlibString string => GConf -> string -> Bool -> IO ()
 gconfSetBool = gconfSet
 
-gconfSetFloat :: GConf -> String -> Double -> IO ()
+gconfSetFloat :: GlibString string => GConf -> string -> Double -> IO ()
 gconfSetFloat = gconfSet
 
-gconfSetString :: GConf -> String -> String -> IO ()
-gconfSetString = gconfSet
+-- gconfSetString :: GlibString string => GConf -> string -> String -> IO ()
+-- gconfSetString = gconfSet
 
-gconfSetPair :: GConfValueClass (a,b) =>
-                GConf -> String -> (a, b) -> IO ()
+gconfSetText :: GlibString string => GConf -> string -> Text -> IO ()
+gconfSetText = gconfSet
+
+gconfSetPair :: (GConfValueClass (a,b), GlibString string) =>
+                GConf -> string -> (a, b) -> IO ()
 gconfSetPair = gconfSet
 
-gconfSetList :: GConfValueClass [a] =>
-                GConf -> String -> [a] -> IO ()
+gconfSetList :: (GConfValueClass [a], GlibString string) =>
+                GConf -> string -> [a] -> IO ()
 gconfSetList = gconfSet
 
 -- | Gets the value of a configuration key.
@@ -330,10 +337,10 @@ gconfGetDefaultFromSchema gc key = do
 -- of note is 'GconfErrorOverridden', indicating that the system administrator
 -- has \"forced\" a value for this key.
 --
-gconfUnset :: GConf -> String -> IO ()
+gconfUnset :: GlibString string => GConf -> string -> IO ()
 gconfUnset gc key =
   propagateGError $ \gerrorPtr ->
-  withCString key $ \strPtr -> do
+  withUTFString key $ \strPtr -> do
   {# call gconf_client_unset #} gc strPtr gerrorPtr
   return ()
 
@@ -368,10 +375,10 @@ gconfSuggestSync gc =
 
 -- |
 --
-gconfAllEntries :: GConf -> String -> IO [(String, GConfValueDyn)]
+gconfAllEntries :: GlibString string => GConf -> string -> IO [(string, GConfValueDyn)]
 gconfAllEntries gc dir = do
   gsList <- propagateGError $ \gerrorPtr ->
-            withCString dir $ \strPtr ->
+            withUTFString dir $ \strPtr ->
             {# call gconf_client_all_entries #} gc strPtr gerrorPtr
   entryList <- fromGSList gsList
   mapM (\entry -> do let entry' = GConfEntry entry
@@ -388,9 +395,9 @@ gconfAllEntries gc dir = do
 
 -- |
 --
-gconfAllDirs :: GConf -> String -> IO [String]
+gconfAllDirs :: GlibString string => GConf -> string -> IO [string]
 gconfAllDirs gc dir = do
-  gsList <- withCString dir $ \strPtr ->
+  gsList <- withUTFString dir $ \strPtr ->
     {# call gconf_client_all_dirs #} gc strPtr nullPtr
   dirList <- fromGSList gsList
   mapM (\strPtr -> do str <- peekUTFString strPtr
@@ -408,8 +415,8 @@ gconfDirExists gc dir =
 
 -- Signals
 
-onValueChanged, afterValueChanged :: GConf ->
-                                     (String -> Maybe GConfValueDyn -> IO ()) ->
+onValueChanged, afterValueChanged :: GlibString string => GConf ->
+                                     (string -> Maybe GConfValueDyn -> IO ()) ->
 				                             IO (ConnectId GConf)
 onValueChanged gc handler =
   connect_GLIBSTRING_PTR__NONE "value_changed" False gc
@@ -418,8 +425,8 @@ afterValueChanged gc handler =
   connect_GLIBSTRING_PTR__NONE "value_changed" True gc
   (convertValueChangedHandler handler)
 
-convertValueChangedHandler :: (String -> Maybe GConfValueDyn -> IO ()) ->
-                              (String -> Ptr GConfValue -> IO ())
+convertValueChangedHandler :: GlibString string => (string -> Maybe GConfValueDyn -> IO ()) ->
+                              (string -> Ptr GConfValue -> IO ())
 convertValueChangedHandler handler key ptr = do
   value <- marshalFromGConfValue (GConfValue $ castPtr ptr)
   handler key value

@@ -38,11 +38,12 @@ Source-Repository head
 
 Library
         build-depends:  base >= 4 && < 5,
-                        glib >= 0.13.0.0 && < 0.14
-						
+                        glib >= 0.13.0.0 && < 0.14,
+                        text >= 0.11.0.6 && < 1.2
+
         build-tools:    gtk2hsC2hs >= 0.13.10,
                         gtk2hsHookGenerator, gtk2hsTypeGen
-						
+
         exposed-modules:
           System.Gnome.GConf
           System.Gnome.GConf.GConfClient		
@@ -52,7 +53,7 @@ Library
           System.Gnome.GConf.Signals
 
         extensions:     ForeignFunctionInterface
-		
+
         cpp-options:    -U__BLOCKS__
         x-Signals-File:  System/Gnome/GConf/Signals.chs
         x-Signals-Modname: System.Gnome.GConf.Signals
