@@ -56,7 +56,8 @@ Library
           System.Gnome.GConf.Types		
           System.Gnome.GConf.Signals
 
-        extensions:     ForeignFunctionInterface
+        default-language:   Haskell2010
+        default-extensions: ForeignFunctionInterface
 
         cpp-options:    -U__BLOCKS__
         x-Signals-File:  System/Gnome/GConf/Signals.chs
